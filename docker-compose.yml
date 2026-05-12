@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: drive-agent-backend
+    command: ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app/api
+      - ./agents:/app/agents
+      - ./core:/app/core
+      - ./schemas:/app/schemas
+      - ./services:/app/services
+      - ./main.py:/app/main.py
+      - /app/.venv
+    env_file:
+      - .env
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: drive-agent-frontend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend:/app/frontend
+    environment:
+      - API_BASE_URL=http://backend:8000
+    depends_on:
+      - backend
