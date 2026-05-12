@@ -12,7 +12,9 @@ router = APIRouter(prefix="/search", tags=["search"])
 async def search_files(
     filters: SearchFilters,
 ) -> SearchResponse:
-    files = search_client.search_files(filters)
+    files = await search_client.search_files(
+        filters,
+    )
 
     return SearchResponse(
         count=len(

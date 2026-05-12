@@ -1,7 +1,9 @@
+import asyncio
 from typing import Any
 from google.oauth2 import service_account
 from googleapiclient.discovery import Resource, build
 
+from schemas.files import DriveFile
 from schemas.search import SearchFilters
 from services.query_builder import QueryBuilder
 
@@ -23,25 +25,30 @@ class DriveService:
             credentials=service_account_info,
         )
 
-    def search_files(
+    async def search_files(
         self,
         filters: SearchFilters,
-    ) -> list[dict[str, Any]]:
+    ) -> list[DriveFile]:
         query = QueryBuilder.build(filters)
 
-        search_response = (
-            self.resource.files()  # pyright: ignore[reportAttributeAccessIssue]
-            .list(
-                q=query,
-                fields="files(id, name, mimeType, webViewLink)",
+        def exectute_search() -> dict[str, Any]:
+            return (
+                self.resource.files()  # pyright: ignore[reportAttributeAccessIssue]
+                .list(
+                    q=query,
+                    fields=("files(id,name,mimeType,modifiedTime)"),
+                )
+                .execute()
             )
-            .execute()
-        )
 
-        return search_response.get(
+        search_response = await asyncio.to_thread(exectute_search)
+
+        files = search_response.get(
             "files",
             [],
         )
+
+        return [DriveFile(**file) for file in files]
 
 
 search_client = DriveService()
