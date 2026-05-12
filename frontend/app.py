@@ -15,6 +15,10 @@ st.title("TailorTalk Drive Agent")
 st.caption("Search Google Drive using natural language")
 
 
+def render_file(file: dict) -> None:
+    st.markdown(f"- [{file['name']}]({file['webViewLink']})  `{file['mimeType']}`")
+
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -24,13 +28,7 @@ for msg in st.session_state.messages:
         st.write(msg["content"])
         if msg["role"] == "assistant" and msg.get("files"):
             for file in msg["files"]:
-                st.markdown(
-                    f"""
-                    ### {file["name"]}
-
-                    - Type: `{file["mimeType"]}`
-                    """
-                )
+                render_file(file)
 
 
 message = st.chat_input(
@@ -56,13 +54,7 @@ if message:
         st.write(response["response"])
 
         for file in response["files"]:
-            st.markdown(
-                f"""
-                ### {file["name"]}
-
-                - Type: `{file["mimeType"]}`
-                """
-            )
+            render_file(file)
 
     st.session_state.messages.append(
         {

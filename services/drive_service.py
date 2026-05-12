@@ -31,24 +31,53 @@ class DriveService:
     ) -> list[DriveFile]:
         query = QueryBuilder.build(filters)
 
+        if query:
+            query = f"{query} and trashed = false"
+        else:
+            query = "trashed = false"
+
         def exectute_search() -> dict[str, Any]:
-            return (
+
+            files = (
                 self.resource.files()  # pyright: ignore[reportAttributeAccessIssue]
                 .list(
                     q=query,
-                    fields=("files(id,name,mimeType,modifiedTime)"),
+                    fields="files(id,name,mimeType,webViewLink,modifiedTime)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True,
                 )
                 .execute()
             )
 
+            print("Search query:", query)
+            print("search_response_files:", files)
+
+            return files
+
         search_response = await asyncio.to_thread(exectute_search)
 
-        files = search_response.get(
-            "files",
-            [],
-        )
+        files = search_response.get("files", [])
 
         return [DriveFile(**file) for file in files]
+
+    async def get_file_content(self, file_id: str) -> tuple[bytes, str]:
+        def _get_meta() -> dict[str, Any]:
+            return (
+                self.resource.files()
+                .get(fileId=file_id, fields="mimeType,name")
+                .execute()
+            )
+
+        def _download() -> bytes:
+            request = self.resource.files().get_media(fileId=file_id)
+            return request.execute()
+
+        meta, content = await asyncio.gather(
+            asyncio.to_thread(_get_meta),
+            asyncio.to_thread(_download),
+        )
+
+        return content, meta["mimeType"]
 
 
 search_client = DriveService()

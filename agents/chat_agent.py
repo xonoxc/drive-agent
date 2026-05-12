@@ -5,6 +5,7 @@ from typing import cast
 from schemas.chat_scheme import ChatMessage
 from schemas.search import SearchFilters
 from services.drive_service import search_client
+from services.query_builder import QueryBuilder
 from core.prompt import build_summery_prompt
 
 
@@ -24,7 +25,12 @@ class DriveAgent:
                 message,
             ),
         )
+        print("Extracted filters:", filters.model_dump())
+        print("Query:", QueryBuilder.build(filters))
+
         files = await search_client.search_files(filters)
+
+        print("Found files:", files)
 
         formatted_files = "\n".join(
             [f"- {file.name} ({file.mimeType})" for file in files]
