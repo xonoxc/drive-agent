@@ -48,10 +48,6 @@ class DriveService:
                 )
                 .execute()
             )
-
-            print("Search query:", query)
-            print("search_response_files:", files)
-
             return files
 
         search_response = await asyncio.to_thread(exectute_search)

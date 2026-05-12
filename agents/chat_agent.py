@@ -25,12 +25,8 @@ class DriveAgent:
                 message,
             ),
         )
-        print("Extracted filters:", filters.model_dump())
-        print("Query:", QueryBuilder.build(filters))
 
         files = await search_client.search_files(filters)
-
-        print("Found files:", files)
 
         formatted_files = "\n".join(
             [f"- {file.name} ({file.mimeType})" for file in files]
